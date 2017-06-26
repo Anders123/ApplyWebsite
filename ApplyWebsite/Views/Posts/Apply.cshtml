@@ -1,0 +1,22 @@
+﻿@model ApplyWebsite.EfModel.Post
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Apply for post</title>
+</head>
+<body>
+    <h3>Apply for post</h3>
+<div>
+    <br/>
+    Post id: @Model.Id.ToString()
+    <br/>
+    Title: @Model.Title
+    <br/>
+    <br/>
+    @Html.ActionLink("Back to posts", "Index")
+</div>
+
+</body>
+</html>

@@ -1,0 +1,42 @@
+﻿@using System.Collections.Generic
+@using Newtonsoft.Json
+@model IEnumerable<ApplyWebsite.EfModel.Post>
+
+@{
+    ViewData["Title"] = "Posts";
+}
+<h3>Posts</h3>
+<table class="table" id="IndexTable">
+<tr>
+
+<th style="width:auto">
+   id
+</th>
+<th style="width: auto">
+    Title
+</th>
+<th style="width: auto"></th>
+<th style="width: auto"></th>
+
+@foreach (var post in Model)
+{
+    <tr>
+        <td>
+            @Html.DisplayFor(modelPost => post.Id, null,null,null)
+        </td>
+        <td>
+            @Html.DisplayFor(modelPost => post.Title, null, null, null)
+        </td>
+        <td>
+            @Html.ActionLink("Apply", "Apply", new { id = post.Id })
+        </td>
+        <td>
+            @Html.ActionLink("Cart", "AddToCart", new { id = post.Id })
+        </td>
+    </tr>
+
+}
+
+</table>
+
+
