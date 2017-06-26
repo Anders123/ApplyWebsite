@@ -1,22 +1,40 @@
-﻿@model ApplyWebsite.EfModel.Post
+﻿@using Newtonsoft.Json
+@model ApplyWebsite.Models.ApplyViewModel
 
 <!DOCTYPE html>
 
-<html>
-<head>
-    <title>Apply for post</title>
-</head>
-<body>
-    <h3>Apply for post</h3>
+
+
+<h3>Apply for post</h3>
 <div>
-    <br/>
-    Post id: @Model.Id.ToString()
-    <br/>
-    Title: @Model.Title
-    <br/>
-    <br/>
+    <br />
+    Post id: @Model.Post.Id.ToString()
+    <br />
+    Title: @Model.Post.Title
+    <br />
+    <br />
+    @{
+        // Show sign in
+        if (Model.SignedInPerson == null)
+        {
+            using (Html.BeginForm("SignIn", "Posts", FormMethod.Post))
+            {
+                @Html.Hidden("applyModel", JsonConvert.SerializeObject(Model))
+                <p>
+                    Please sign in:<br/>
+                    <input type="text" name="name" id="name" placeholder="Name"/> <br/>
+                    <input type="text" name="email" id="email" placeholder="Email"/>
+                    <input type="submit" id="SignIn" name="SignIn" value="Signin" class="btn btn-default"/>
+                </p>
+            }
+        }
+        // Start interview
+        else
+        {
+            
+        }
+    }
+
+
     @Html.ActionLink("Back to posts", "Index")
 </div>
-
-</body>
-</html>
