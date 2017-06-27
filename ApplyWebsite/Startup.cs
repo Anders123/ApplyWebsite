@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ApplyWebsite.EfModel;
+using ApplyWebsite.Helpers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +31,8 @@ namespace ApplyWebsite
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddMemoryCache();
+
             // Add framework services.
             services.AddMvc();
 
@@ -46,6 +49,7 @@ namespace ApplyWebsite
                 options.CookieHttpOnly = true;
             });
 
+            services.Configure<WebApiSettingsForApplyProcess>(Configuration.GetSection("WebApiSettingsForApplyProcess"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
