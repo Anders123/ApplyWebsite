@@ -21,12 +21,16 @@
             {
                 @Html.Hidden("applyModel", JsonConvert.SerializeObject(Model))
                 <p>
-                    Please sign in:<br/>
+                    Please provide name and email:<br/>
                     <input type="text" name="name" id="name" placeholder="Name"/> <br/>
-                    <input type="text" name="email" id="email" placeholder="Email"/>
-                    <input type="submit" id="SignIn" name="SignIn" value="Signin" class="btn btn-default"/>
+                    <input type="text" name="email" id="email" placeholder="Email"/><br/>
+                    <input type="submit" id="SignIn" name="SignIn" value="OK" class="btn btn-default"/>
                 </p>
             }
+            <br/>
+            @Html.ValidationMessage("ControllerError", new { style = "color: red" })
+            <br/>
+            <br/>
         }
         // Start interview
         else

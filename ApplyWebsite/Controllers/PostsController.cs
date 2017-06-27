@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using ApplyWebsite.EfModel;
+using ApplyWebsite.Helpers;
 using ApplyWebsite.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,11 @@ namespace ApplyWebsite.Controllers
         public async Task<IActionResult> SignIn(string name, string email, string applyModel)
         {
             var viewModel = JsonConvert.DeserializeObject<ApplyViewModel>(applyModel);
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(email))
+            {
+                ViewModelError.AddViewModelError(ModelState, "ControllerError", "Please provide name and email");
+                return View("Apply", viewModel);
+            }
 
             // Call web api to sign in
             using (var client = new HttpClient())
