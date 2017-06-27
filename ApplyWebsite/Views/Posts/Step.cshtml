@@ -1,0 +1,42 @@
+﻿@using ApplyWebsite.Models
+@using Newtonsoft.Json
+@model ApplyWebsite.Models.ApplyViewModel
+
+
+<h3>Apply for post</h3>
+<div>
+    <br />
+    Post id: @Model.Post.Id.ToString()
+    <br />
+    Title: @Model.Post.Title
+    <br />
+    <br />
+
+
+    @using (Html.BeginForm("Step", "Posts", FormMethod.Post))
+    {
+        @Html.Hidden("applyModelTmp", JsonConvert.SerializeObject(Model)) @*TODO: remove this*@
+        @Html.Hidden("applyModel", JsonConvert.SerializeObject(Model))
+        @Html.Hidden("questionCount", Model.Interview.Questions.Count)
+        @Html.Hidden("currentStep", Model.CurrentStep)
+
+        <p>
+            Question @(Model.CurrentStep + 1) of @Model.Interview.Questions.Count
+        </p>
+
+        <ul>
+            @{
+
+                var currentQuestion = Model.Interview.Questions[Model.CurrentStep];
+                <li>
+                    Title: @currentQuestion.QuestionTitle
+                    <br />
+                    Text: @currentQuestion.QuestionText
+                </li>
+            }
+        </ul>
+
+        <input type="submit" id="PreviousSubmit" name="Previous" value="Pevious" class="btn btn-default" />
+        <input type="submit" id="NextSubmit" name="Next" value="Next" class="btn btn-default" />
+                }
+</div>

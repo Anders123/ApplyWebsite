@@ -3,8 +3,6 @@
 
 <!DOCTYPE html>
 
-
-
 <h3>Apply for post</h3>
 <div>
     <br />
@@ -19,6 +17,7 @@
         {
             using (Html.BeginForm("SignIn", "Posts", FormMethod.Post))
             {
+
                 @Html.Hidden("applyModel", JsonConvert.SerializeObject(Model))
                 <p>
                     Please provide name and email:<br/>
@@ -33,10 +32,35 @@
             <br/>
         }
         // Start interview
-        else
+        @*else
         {
-            
-        }
+            using (Html.BeginForm("Step", "Posts", FormMethod.Post))
+            {
+
+                @Html.Hidden("applyModel", JsonConvert.SerializeObject(Model))
+                @Html.Hidden("questionCount", Model.Interview.Questions.Count)
+                @Html.Hidden("currentStep", Model.CurrentStep)
+
+                <p>
+                    Question @(Model.CurrentStep + 1) of @Model.Interview.Questions.Count
+                </p>
+        
+                <ul>
+                    @{
+
+                        var currentQuestion = Model.Interview.Questions[Model.CurrentStep];
+                        <li>
+                            Title: @currentQuestion.QuestionTitle
+                            <br />
+                            Text: @currentQuestion.QuestionText
+                        </li>
+                    }
+                </ul>
+
+                <input type="submit" id="PreviousSubmit" name="Previous" value="Pevious" class="btn btn-default" />
+                <input type="submit" id="NextSubmit" name="Next" value="Next" class="btn btn-default" />
+            }
+        }*@
     }
 
 

@@ -14,6 +14,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using WebApiCommon;
+using Interview = WebApiCommon.Interview;
 
 namespace ApplyWebsite.Controllers
 {
@@ -23,7 +24,7 @@ namespace ApplyWebsite.Controllers
         /// In memory cache.
         /// </summary>
         private readonly IMemoryCache _cache;
-        private const string _postsCacheId = "PostsCacheId";
+        private const string PostsCacheId = "PostsCacheId";
 
         /// <summary>
         /// Settings for calling the web API.
@@ -44,11 +45,11 @@ namespace ApplyWebsite.Controllers
         {   // Try to get posts from the cache
             List<Post> posts = null;
             
-            if (!_cache.TryGetValue(_postsCacheId, out posts))
+            if (!_cache.TryGetValue(PostsCacheId, out posts))
             {
                 posts = await Db.Post.Select(x => x).Take(10).ToListAsync();
                 var offset24Hours = new DateTimeOffset(DateTime.Now.ToUniversalTime()).AddSeconds(60*20); // 20 min
-                _cache.Set(_postsCacheId, posts, offset24Hours);
+                _cache.Set(PostsCacheId, posts, offset24Hours);
             }
 
             return View(posts);
@@ -106,13 +107,11 @@ namespace ApplyWebsite.Controllers
                 ViewModelError.AddViewModelError(ModelState, "ControllerError", "Please provide name and email");
                 return View("Apply", viewModel);
             }
-
-            // Call web api to sign in
+       
             using (var client = new HttpClient())
             {
-                // TODO: url encode name and email
-                var url = new Uri($"{_webApiSettings}Person/SignIn?name={name}&email={email}", UriKind.Absolute);
-                HttpResponseMessage response = await client.PostAsync(url, null);
+                // sign in
+                var response = await client.PostAsync(UrlBuilder.SignInUri(_webApiSettings.BaseUrl, name, email), null);
 
                 // Sign in succeded
                 if (response.IsSuccessStatusCode)
@@ -121,11 +120,41 @@ namespace ApplyWebsite.Controllers
                     var signInStatus = JsonConvert.DeserializeObject<SigninStatus>(data);
                     viewModel.SignedInPerson = new SignedInPerson(name, email, signInStatus.PersonId);
 
-                    // 1. Create a new briefcase (for the single post) 
-                    url = new Uri($"{_webApiSettings}Briefcase/0/AddPost?briefcaseTypeId=1&personId={viewModel.SignedInPerson.PersonId}&postId={viewModel.Post.Id}", UriKind.Absolute);
-                    response = await client.PostAsync(url, null);
+                    // 1. Create a new briefcase (for the single post) or get existing briefcase
+                    response = await client.PostAsync(UrlBuilder.BriefcaseAddPostUri(_webApiSettings.BaseUrl, 0, viewModel.SignedInPerson.PersonId, viewModel.Post.Id), null);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var briefcaseId = await response.Content.ReadAsStringAsync();
+                        viewModel.BriefcaseId = int.Parse(briefcaseId);
+                    }
+                    else
+                    {
+                        // Try to get existing brieafcase id for person
+                        var briefcase = Db.Briefcase.FirstOrDefault(x => x.PersonId == viewModel.SignedInPerson.PersonId);
+                        if (briefcase != null)
+                        {
+                            viewModel.BriefcaseId = briefcase.Id;
+                        }
+                        else
+                        {
+                            ViewModelError.AddViewModelError(ModelState, "ControllerError", "An error occurred, please try again");
+                            return View("Apply", viewModel);
+                        }
+                    }
 
-
+                    // 2. Create the interview
+                    response = await client.PostAsync(UrlBuilder.InterviewCreateUri(_webApiSettings.BaseUrl, viewModel.BriefcaseId, null), null);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        data =  await response.Content.ReadAsStringAsync();
+                        viewModel.Interview = JsonConvert.DeserializeObject<Interview>(data);
+                        viewModel.CurrentStep = 0;
+                    }
+                    else
+                    {
+                        ViewModelError.AddViewModelError(ModelState, "ControllerError", "An error occurred, please try again");
+                        return View("Apply", viewModel);
+                    }
                 }
                 // Failed
                 else
@@ -134,9 +163,39 @@ namespace ApplyWebsite.Controllers
                     return View("Apply", viewModel);
                 }
             }
-            return View("Apply", viewModel);
+
+            return View("Step", viewModel);
         }
 
+        /// <summary>
+        /// Perform a step in the interview wizard.
+        /// </summary>
+        /// <param name="applyModel"></param>
+        /// <returns></returns>
+        public async Task<IActionResult> Step(string applyModel, string applyModelTmp)
+        {
+            ModelState.Clear();
+            var viewModel = JsonConvert.DeserializeObject<ApplyViewModel>(applyModelTmp);
+
+            var next = Request.Form["Next"];
+            var previous = Request.Form["Previous"];
+            if (next.Count > 0)
+            {
+                if (viewModel.CurrentStep < viewModel.Interview.Questions.Count - 1)
+                {
+                    viewModel.CurrentStep += 1;
+                }
+            }
+            else if (previous.Count > 0)
+            {
+                if (viewModel.CurrentStep > 0)
+                {
+                    viewModel.CurrentStep -= 1;
+                }
+            }
+
+            return View("Step", viewModel);
+        }
 
     }
 }
